@@ -67,7 +67,7 @@ class AutoEncoder(torch.nn.Module):
     ):
         super().__init__()
         mid_channels = input_channels
-        mid_kernel_size = 8
+        mid_kernel_size = 4
 
         self.conv1 = torch.nn.Sequential(
             torch.nn.Conv2d(input_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=2),
@@ -96,7 +96,7 @@ class AutoEncoder(torch.nn.Module):
         )
 
         self.deconv2 = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(mid_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=2),
+            torch.nn.ConvTranspose2d(mid_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=1),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(mid_channels)
         )
