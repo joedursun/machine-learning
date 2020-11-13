@@ -69,6 +69,12 @@ class AutoEncoder(torch.nn.Module):
         mid_channels = input_channels
         mid_kernel_size = 4
 
+        self.conv0 = torch.nn.Sequential(
+            torch.nn.Conv2d(input_channels, mid_channels, kernel_size=5, stride=1, padding=1),
+            torch.nn.BatchNorm2d(3),
+            torch.nn.ReLU()
+        )
+
         self.conv1 = torch.nn.Sequential(
             torch.nn.Conv2d(input_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=2),
             torch.nn.LeakyReLU(),
@@ -87,10 +93,10 @@ class AutoEncoder(torch.nn.Module):
             torch.nn.BatchNorm2d(mid_channels)
         )
 
-        self.encoder = torch.nn.ModuleList([self.conv1, self.conv2, self.conv3])
+        self.encoder = torch.nn.ModuleList([self.conv0, self.conv1, self.conv2, self.conv3])
 
         self.deconv1 = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(latent_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=2),
+            torch.nn.ConvTranspose2d(mid_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=2),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(mid_channels)
         )
@@ -106,7 +112,13 @@ class AutoEncoder(torch.nn.Module):
             torch.nn.Sigmoid(),
         )
 
-        self.decoder = torch.nn.ModuleList([self.deconv1, self.deconv2, self.deconv3])
+        self.deconv4 = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(mid_channels, input_channels, kernel_size=5, stride=1, padding=2),
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(3)
+        )
+
+        self.decoder = torch.nn.ModuleList([self.deconv1, self.deconv2, self.deconv3, self.deconv4])
 
 #         self.resblocks = torch.nn.Sequential(*[ResidualBlock(output_channels) for _ in range(num_blocks)])
 
@@ -119,7 +131,6 @@ class AutoEncoder(torch.nn.Module):
         for layer in self.decoder:
             x = layer(x)
 
-        x = torch.clamp(x, max=255)
         return x
 
     def save(self, filename, optimizer=None, loss=None, epoch=-1):
