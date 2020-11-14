@@ -16,6 +16,9 @@ def isfloat(value):
         return False
 
 def get_layer(str):
+    """
+    TODO: fixme
+    """
     name, attrs = str.split('(')
     attrs = attrs.replace(')', '')
     attrs = attrs.split(', ')
@@ -63,65 +66,58 @@ class AutoEncoder(torch.nn.Module):
         input_channels,
         h_w=(400,400),
         num_blocks=2,
-        latent_channels=1,
+        mid_channels=10,
     ):
         super().__init__()
-        mid_channels = input_channels
-        mid_kernel_size = 4
-
-        self.conv0 = torch.nn.Sequential(
-            torch.nn.Conv2d(input_channels, mid_channels, kernel_size=5, stride=1, padding=1),
-            torch.nn.BatchNorm2d(3),
+        
+        conv0 = torch.nn.Sequential(
+            torch.nn.Conv2d(input_channels, mid_channels, kernel_size=6, stride=2, padding=0),
+            torch.nn.BatchNorm2d(mid_channels),
             torch.nn.ReLU()
         )
-
-        self.conv1 = torch.nn.Sequential(
-            torch.nn.Conv2d(input_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=2),
-            torch.nn.LeakyReLU(),
-            torch.nn.BatchNorm2d(mid_channels)
+        
+        conv1 = torch.nn.Sequential(
+            torch.nn.Conv2d(mid_channels, mid_channels, kernel_size=5, stride=2, padding=0),
+            torch.nn.BatchNorm2d(mid_channels),
+            torch.nn.ReLU()
         )
-
-        self.conv2 = torch.nn.Sequential(
-            torch.nn.Conv2d(mid_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=2),
-            torch.nn.LeakyReLU(),
-            torch.nn.BatchNorm2d(mid_channels)
+        
+        conv2 = torch.nn.Sequential(
+            torch.nn.Conv2d(mid_channels, input_channels, kernel_size=5, stride=1, padding=1),
+            torch.nn.BatchNorm2d(input_channels),
+            torch.nn.ReLU()
         )
+        
+        self.encoder = torch.nn.ModuleList([
+            conv0,
+            conv1,
+            conv2
+        ])
 
-        self.conv3 = torch.nn.Sequential(
-            torch.nn.Conv2d(mid_channels, latent_channels, kernel_size=mid_kernel_size, stride=2, padding=2),
-            torch.nn.LeakyReLU(),
-            torch.nn.BatchNorm2d(mid_channels)
-        )
-
-        self.encoder = torch.nn.ModuleList([self.conv0, self.conv1, self.conv2, self.conv3])
-
-        self.deconv1 = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(mid_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=2),
+        deconv0 = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(3, mid_channels, kernel_size=6, stride=1, padding=1),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(mid_channels)
         )
 
-        self.deconv2 = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(mid_channels, mid_channels, kernel_size=mid_kernel_size, stride=2, padding=1),
+        deconv1 = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(mid_channels, mid_channels, kernel_size=7, stride=2, padding=1),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(mid_channels)
         )
 
-        self.deconv3 = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(mid_channels, input_channels, kernel_size=mid_kernel_size, stride=2, padding=1),
-            torch.nn.Sigmoid(),
-        )
-
-        self.deconv4 = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(mid_channels, input_channels, kernel_size=5, stride=1, padding=2),
+        deconv2 = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(mid_channels, input_channels, kernel_size=6, stride=2, padding=1),
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(3)
+            torch.nn.BatchNorm2d(input_channels)
         )
 
-        self.decoder = torch.nn.ModuleList([self.deconv1, self.deconv2, self.deconv3, self.deconv4])
-
-#         self.resblocks = torch.nn.Sequential(*[ResidualBlock(output_channels) for _ in range(num_blocks)])
-
+        self.decoder = torch.nn.ModuleList([
+            deconv0,
+            deconv1,
+            deconv2
+        ])
+        
     def forward(self, x):
         for layer in self.encoder:
             x = layer(x)
