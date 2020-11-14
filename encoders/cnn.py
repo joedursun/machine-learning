@@ -69,25 +69,25 @@ class AutoEncoder(torch.nn.Module):
         mid_channels=10,
     ):
         super().__init__()
-        
+
         conv0 = torch.nn.Sequential(
             torch.nn.Conv2d(input_channels, mid_channels, kernel_size=6, stride=2, padding=0),
             torch.nn.BatchNorm2d(mid_channels),
             torch.nn.ReLU()
         )
-        
+
         conv1 = torch.nn.Sequential(
             torch.nn.Conv2d(mid_channels, mid_channels, kernel_size=5, stride=2, padding=0),
             torch.nn.BatchNorm2d(mid_channels),
             torch.nn.ReLU()
         )
-        
+
         conv2 = torch.nn.Sequential(
             torch.nn.Conv2d(mid_channels, input_channels, kernel_size=5, stride=1, padding=1),
             torch.nn.BatchNorm2d(input_channels),
             torch.nn.ReLU()
         )
-        
+
         self.encoder = torch.nn.ModuleList([
             conv0,
             conv1,
@@ -117,7 +117,7 @@ class AutoEncoder(torch.nn.Module):
             deconv1,
             deconv2
         ])
-        
+
     def forward(self, x):
         for layer in self.encoder:
             x = layer(x)
