@@ -1,0 +1,8 @@
+torch
+torchvision
+torchaudio
+pytorch-fast-transformers
+pytorch-lightning
+numpy
+scikit-learn
+scipy
