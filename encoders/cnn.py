@@ -96,7 +96,7 @@ class AutoEncoder(pl.LightningModule):
         deconv2 = torch.nn.Sequential(
             torch.nn.ConvTranspose2d(mid_channels, input_channels, kernel_size=8, stride=2, padding=0),
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(input_channels)
+            torch.nn.BatchNorm2d(input_channels),
         )
 
         unpool = nn.MaxUnpool2d(2, stride=2)
@@ -129,6 +129,7 @@ class AutoEncoder(pl.LightningModule):
             else:
                 x = layer(x)
 
+        x = torch.clamp(x, 0, 1)
         return x
 
     def training_step(self, batch, batch_idx):
